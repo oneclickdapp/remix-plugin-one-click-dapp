@@ -1,0 +1,17 @@
+{
+  "include": ["src", "profile"],
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "baseUrl": ".",
+    "sourceMap": false,
+    "noImplicitAny": false,
+    "moduleResolution": "node",
+    "typeRoots": ["node_modules/@types"],
+    "lib": ["es2016", "dom", "es5"],
+    "target": "esnext",
+    "module": "es6",
+    "outDir": "./dist",
+    "declaration": false,
+    "experimentalDecorators": true
+  }
+}
