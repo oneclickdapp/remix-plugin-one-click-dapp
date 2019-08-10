@@ -49,6 +49,6 @@ Make a PR on `src/remixAppManager.js` [in the remix-ide repo](https://github.com
 
 **Hosting**
 
-- The most common method is to use www.surge.sh (e.g. https://remix-ethdoc-plugin.surge.sh)
+- The most common method is to use www.surge.sh (e.g. https://remix-ethdoc-plugin.surge.sh). See [this doc](https://surge.sh/help/deploying-continuously-using-git-hooks) on how to deploy continuously from a github repo.
 - OR use github pages and follow [this guide](https://zubialevich.blogspot.com/2018/09/how-to-build-typescript-github-pages-app.html)
 - OR host it on your own server

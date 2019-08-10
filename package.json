@@ -1,0 +1,31 @@
+{
+  "name": "remix-one-click-plugin",
+  "version": "1.0.0",
+  "description": "**Generate a persistent interface for your smart contract directly from Remix.**",
+  "main": "server.js",
+  "dependencies": {
+    "events": "^3.0.0",
+    "express": "^4.17.1",
+    "lit-element": "^2.2.1",
+    "surge": "^0.21.3",
+    "ts-node": "^8.3.0",
+    "tslint-config-airbnb": "^5.11.1",
+    "typescript": "^3.5.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pi0neerpat/remix-one-click-plugin.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pi0neerpat/remix-one-click-plugin/issues"
+  },
+  "homepage": "https://github.com/pi0neerpat/remix-one-click-plugin#readme"
+}
