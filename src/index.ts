@@ -1,4 +1,5 @@
 import { LitElement, html, customElement } from 'lit-element';
+import axios from 'axios'
 import { createIframeClient } from './client';
 import {
   remixApi,
@@ -8,15 +9,14 @@ import {
 } from './utils';
 import { createDoc } from './ethdoc';
 
+const ONE_CLICK_DAPP_URL="https://oneclickdapp.com"
+
 interface ContractMap {
   [contractName: string]: string;
 }
 
-interface AlertMap {
-  [contractName: string]: {
-    message: string;
-    type: 'success' | 'warning';
-  };
+interface InterfaceMap {
+  [name: string]: string;
 }
 
 @customElement('eth-doc')
@@ -24,7 +24,8 @@ export class EthdocComponent extends LitElement {
   /** client to communicate with the IDE */
   private client = createIframeClient();
   private docs: ContractMap = {};
-  private docAlerts: AlertMap = {};
+  private docAlerts: any = {};
+  private dapps: InterfaceMap = {};
 
   constructor() {
     super();
@@ -46,7 +47,7 @@ export class EthdocComponent extends LitElement {
         const status: Status = {
           key: 'succeed',
           type: 'success',
-          title: 'New documentation ready'
+          title: 'New interface generated'
         };
         this.client.emit('statusChanged', status);
         this.requestUpdate();
@@ -59,60 +60,94 @@ export class EthdocComponent extends LitElement {
     return this;
   }
 
-  /** Write documentation to the FileSystem */
-  async writeDoc(name: string) {
+  /** Use One Click Dapp API to generate an interface */
+  async generateInterface() {
     try {
-      const content = this.docs[name];
-      await this.client.fileManager.setFile(`browser/${name}.doc.md`, content);
-      this.showAlert(name);
+      this.client.emit('statusChanged', { key: 'loading', type: 'info', title: 'Generating ...' })
+      axios
+        .post(`${ONE_CLICK_DAPP_URL}/contracts`, {
+          contractName: "remix d-d-dapp",
+          contractAddress: "0xabc",
+          abi: this.docs[0],
+          network: "unknown",
+          creatorAddress: 'remix-plugin'
+        })
+        .then(res => {
+            this.dapps['remix d-d-dapp'] = res.data.mnemonic;
+        })
+        .catch(err => {
+          throw(err.message);
+        });
+
+      this.showAlert();
+      setTimeout(() => {
+        this.client.emit('statusChanged', { key: 'none' })
+      }, 10000)
     } catch (err) {
-      this.showAlert(name, err);
+      this.showAlert(err);
     }
   }
 
-  showAlert(name: string, err?: string) {
+  showAlert(err?: string) {
     if (!err) {
-      const message = `${name} created / updated inside File Manager 🦄`;
-      this.docAlerts[name] = { message, type: 'success' };
+      const message = `New interface generated!`;
+      this.docAlerts = { message, type: 'success' };
     } else {
-      const message = `😓${name} documentation was not generated : ${err}`;
-      this.docAlerts[name] = { message, type: 'warning' };
+      const message = `Interface was not generated : ${err}`;
+      this.docAlerts = { message, type: 'warning' };
     }
     this.requestUpdate();
     setTimeout(() => {
-      delete this.docAlerts[name];
+      this.docAlerts = {};
       this.requestUpdate();
     }, 3000);
   }
 
   render() {
-    const contracts = Object.keys(this.docs).map(
-      name => html`
-        <button
-          class="list-group-item list-group-item-action"
-          @click="${() => this.writeDoc(name)}"
-        >
-          ${name} Documentation
-        </button>
-      `
-    );
+    const contracts = Object.keys(this.docs).map((name, index) => {
+      return html`
+        <div class="list-group-item ">
+          ${name} [${this.docs[name].length} functions]
+        </div>
+      `;
+    });
 
-    const docAlerts = Object.keys(this.docAlerts)
-      .map(key => this.docAlerts[key])
-      .map(({ type, message }) => {
-        return html`
-          <div class="alert alert-${type}" role="alert">${message}</div>
-        `;
-      });
+    const docAlerts = html`
+      <div class="alert alert-${this.docAlerts.type}" role="alert">
+        ${this.docAlerts.message}
+      </div>
+    `;
 
     const info =
       Object.keys(this.docs).length === 0
         ? html`
-            <p>Compile a contract with Solidity Compiler.</p>
+            <p>Please compile a contract using the Solidity Compiler.</p>
           `
         : html`
-            <p>Click on a contract to generate documentation.</p>
+            <p>Available contracts:</p>
           `;
+
+    const button =
+      Object.keys(this.docs).length === 0
+        ? ''
+        : html`
+            <button
+              class="btn btn-lg btn-primary"
+              @click="${() => this.generateInterface()}"
+            >
+              Generate Interface
+            </button>
+          `;
+
+    const interfaces = Object.keys(this.dapps).map((name, index) => {
+      return html`
+        <a href="${ONE_CLICK_DAPP_URL}/${this.dapps[name]}" target="_blank">
+          <div class="list-group-item list-group-item-action">
+            ${name}: ${this.dapps[name]}
+          </div>
+        </a>
+      `;
+    });
 
     return html`
       <style>
@@ -140,6 +175,8 @@ export class EthdocComponent extends LitElement {
       <main>
         ${info}
         <div class="list-group">${contracts}</div>
+        <div id="button">${button}</div>
+        <div id="interfaces">${interfaces}</div>
         <div id="alerts">${docAlerts}</div>
       </main>
     `;

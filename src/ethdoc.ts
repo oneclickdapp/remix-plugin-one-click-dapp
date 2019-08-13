@@ -13,10 +13,11 @@ type TemplateDoc<T> = { [key in keyof T]: (...params: any[]) => string };
 /** Create documentation for a compilation result */
 export function createDoc(result: CompilationResult) {
   return Object.keys(result.contracts).reduce((acc, fileName) => {
+    // Object.keys(contracts).forEach(
+    //   name => (acc[name] = getContractDoc(name, result.contracts[fileName]))
+    // );
     const contracts = result.contracts[fileName];
-    Object.keys(contracts).forEach(
-      name => (acc[name] = getContractDoc(name, contracts[name]))
-    );
+    Object.keys(contracts).forEach(name => (acc[name] = contracts[name].abi));
     return acc;
   }, {});
 }

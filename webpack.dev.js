@@ -1,16 +1,32 @@
-const path = require('path')
-const merge = require('webpack-merge');
-const common = require('../../../webpack.common');
+const TsconfigPathsPlugin = require('tsconfig-paths-webpack-plugin');
+const path = require('path');
 
-module.exports = merge(common, {
+module.exports = {
   mode: 'development',
   entry: './src/index.ts',
   output: {
     path: path.resolve(__dirname, './dist'),
-    filename: 'index.js',
+    filename: 'index.js'
   },
   devServer: {
     contentBase: './dist',
     port: 8081
   },
-})
+  module: {
+    rules: [
+      {
+        test: /\.ts?$/,
+        exclude: [/node_modules/],
+        loader: 'ts-loader'
+      }
+    ]
+  },
+  resolve: {
+    extensions: ['.ts', '.js'],
+    plugins: [
+      new TsconfigPathsPlugin({
+        configFile: path.resolve(__dirname, './tsconfig.json')
+      })
+    ]
+  }
+};
