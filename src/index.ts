@@ -7,7 +7,6 @@ import {
   CompilationResult,
   Status
 } from './utils';
-import { createDoc } from './ethdoc';
 
 const ONE_CLICK_DAPP_URL="https://oneclickdapp.com"
 
@@ -43,7 +42,7 @@ export class EthdocComponent extends LitElement {
         result: CompilationResult
       ) => {
         if (!result) return;
-        this.docs = createDoc(result);
+        this.docs = this.createDoc(result);
         const status: Status = {
           key: 'succeed',
           type: 'success',
@@ -55,29 +54,34 @@ export class EthdocComponent extends LitElement {
     );
   }
 
-  /** ⚠️ If you're using LitElement you should disable Shadow Root ⚠️ */
-  createRenderRoot() {
-    return this;
+  createDoc(result: CompilationResult) {
+    return Object.keys(result.contracts).reduce((acc, fileName) => {
+      const contracts = result.contracts[fileName];
+      Object.keys(contracts).forEach(name => (acc[name] = contracts[name].abi));
+      return acc;
+    }, {});
   }
 
   /** Use One Click Dapp API to generate an interface */
   async generateInterface() {
+    // const abi =
+    // console.log(abi)
     try {
       this.client.emit('statusChanged', { key: 'loading', type: 'info', title: 'Generating ...' })
-      axios
-        .post(`${ONE_CLICK_DAPP_URL}/contracts`, {
-          contractName: "remix d-d-dapp",
-          contractAddress: "0xabc",
-          abi: this.docs[0],
-          network: "unknown",
-          creatorAddress: 'remix-plugin'
-        })
-        .then(res => {
-            this.dapps['remix d-d-dapp'] = res.data.mnemonic;
-        })
-        .catch(err => {
-          throw(err.message);
-        });
+      // axios
+      //   .post(`${ONE_CLICK_DAPP_URL}/contracts`, {
+      //     contractName: "remix d-d-dapp",
+      //     contractAddress: "0xabc",
+      //     abi: this.docs[0],
+      //     network: "unknown",
+      //     creatorAddress: 'remix-plugin'
+      //   })
+      //   .then(res => {
+      //       this.dapps['remix d-d-dapp'] = res.data.mnemonic;
+      //   })
+      //   .catch(err => {
+      //     throw(err.message);
+      //   });
 
       this.showAlert();
       setTimeout(() => {
