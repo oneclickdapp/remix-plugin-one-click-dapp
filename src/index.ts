@@ -1,5 +1,4 @@
 import { LitElement, html, customElement } from 'lit-element';
-import axios from 'axios'
 import { createIframeClient } from './client';
 import {
   remixApi,
@@ -7,24 +6,35 @@ import {
   CompilationResult,
   Status
 } from './utils';
+import axios from 'axios';
+import encouragement from './encouragement';
 
-const ONE_CLICK_DAPP_URL="https://oneclickdapp.com"
+const ONE_CLICK_DAPP_URL = 'https://oneclickdapp.com';
 
-interface ContractMap {
-  [contractName: string]: string;
-}
+type contract = {
+  abi: any[];
+};
 
-interface InterfaceMap {
-  [name: string]: string;
-}
+type ContractMap = {
+  [contractName: string]: contract;
+};
 
-@customElement('eth-doc')
-export class EthdocComponent extends LitElement {
+type dapp = {
+  mnemonic: string;
+  abi: any[];
+};
+
+type dappMap = {
+  [name: string]: dapp;
+};
+
+@customElement('one-click-dapp')
+export class OneClickDapp extends LitElement {
   /** client to communicate with the IDE */
   private client = createIframeClient();
-  private docs: ContractMap = {};
-  private docAlerts: any = {};
-  private dapps: InterfaceMap = {};
+  private contracts: ContractMap = {};
+  private contractAlerts: any = {};
+  private oneclickdapps: dappMap = {};
 
   constructor() {
     super();
@@ -42,7 +52,7 @@ export class EthdocComponent extends LitElement {
         result: CompilationResult
       ) => {
         if (!result) return;
-        this.docs = this.createDoc(result);
+        this.contracts = this.createContracts(result);
         const status: Status = {
           key: 'succeed',
           type: 'success',
@@ -54,39 +64,78 @@ export class EthdocComponent extends LitElement {
     );
   }
 
-  createDoc(result: CompilationResult) {
+  /** ⚠️ If you're using LitElement you should disable Shadow Root ⚠️ */
+  createRenderRoot() {
+    return this;
+  }
+
+  createContracts(result: CompilationResult) {
     return Object.keys(result.contracts).reduce((acc, fileName) => {
       const contracts = result.contracts[fileName];
-      Object.keys(contracts).forEach(name => (acc[name] = contracts[name].abi));
+      Object.keys(contracts).forEach(
+        name => (acc[name] = { abi: contracts[name].abi })
+      );
       return acc;
     }, {});
   }
 
   /** Use One Click Dapp API to generate an interface */
   async generateInterface() {
-    // const abi =
-    // console.log(abi)
     try {
-      this.client.emit('statusChanged', { key: 'loading', type: 'info', title: 'Generating ...' })
-      // axios
-      //   .post(`${ONE_CLICK_DAPP_URL}/contracts`, {
-      //     contractName: "remix d-d-dapp",
-      //     contractAddress: "0xabc",
-      //     abi: this.docs[0],
-      //     network: "unknown",
-      //     creatorAddress: 'remix-plugin'
-      //   })
-      //   .then(res => {
-      //       this.dapps['remix d-d-dapp'] = res.data.mnemonic;
-      //   })
-      //   .catch(err => {
-      //     throw(err.message);
-      //   });
+      const dappName = (<HTMLInputElement>document.getElementById('dappName'))
+        .value;
+      if (dappName.trim() === '') {
+        throw new Error('Please enter a name for your dapp');
+      }
 
-      this.showAlert();
+      const dappAddress = (<HTMLInputElement>(
+        document.getElementById('dappAddress')
+      )).value;
+      if (!/^(0x)+[0-9a-fA-F]{40}$/i.test(dappAddress)) {
+        throw new Error('Please enter a valid contract address');
+      }
+
+      const selectedContractNames = [].slice
+        .call(document.querySelectorAll('input[type=checkbox]:checked'))
+        .map(checked => {
+          return (<HTMLInputElement>checked).value;
+        });
+      const combinedAbi = selectedContractNames.reduce(
+        (acc, name) => {
+          return acc.concat(this.contracts[name].abi);
+        },
+        <any>[]
+      );
+      if (combinedAbi.length === 0) {
+        throw new Error('Please select at least one contract');
+      }
+
+      this.client.emit('statusChanged', {
+        key: 'loading',
+        type: 'info',
+        title: 'Generating ...'
+      });
+      axios
+        .post(`${ONE_CLICK_DAPP_URL}/contracts`, {
+          contractName: dappName,
+          contractAddress: dappAddress,
+          abi: combinedAbi,
+          network: 'unknown',
+          creatorAddress: 'remix-plugin'
+        })
+        .then(res => {
+          this.oneclickdapps[dappName] = {
+            abi: combinedAbi,
+            mnemonic: res.data.mnemonic
+          };
+          this.showAlert();
+        })
+        .catch(err => {
+          throw err.message;
+        });
       setTimeout(() => {
-        this.client.emit('statusChanged', { key: 'none' })
-      }, 10000)
+        this.client.emit('statusChanged', { key: 'none' });
+      }, 10000);
     } catch (err) {
       this.showAlert(err);
     }
@@ -94,62 +143,114 @@ export class EthdocComponent extends LitElement {
 
   showAlert(err?: string) {
     if (!err) {
-      const message = `New interface generated!`;
-      this.docAlerts = { message, type: 'success' };
+      const message =
+        encouragement[Math.floor(Math.random() * encouragement.length)];
+      this.contractAlerts = { message, type: 'success' };
     } else {
-      const message = `Interface was not generated : ${err}`;
-      this.docAlerts = { message, type: 'warning' };
+      const message = `${err}`;
+      this.contractAlerts = { message, type: 'warning' };
     }
     this.requestUpdate();
     setTimeout(() => {
-      this.docAlerts = {};
+      this.contractAlerts = {};
       this.requestUpdate();
-    }, 3000);
+    }, 5000);
   }
 
   render() {
-    const contracts = Object.keys(this.docs).map((name, index) => {
-      return html`
-        <div class="list-group-item ">
-          ${name} [${this.docs[name].length} functions]
-        </div>
-      `;
-    });
+    const isContracts = Object.keys(this.contracts).length > 0;
 
-    const docAlerts = html`
-      <div class="alert alert-${this.docAlerts.type}" role="alert">
-        ${this.docAlerts.message}
+    const availableContracts = isContracts
+      ? Object.keys(this.contracts).map((name, index) => {
+          return html`
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                value="${name}"
+                id="${index}"
+                checked
+              />
+              <label>
+                ${name} [${this.contracts[name].abi.length} functions]
+              </label>
+            </div>
+          `;
+        })
+      : html`
+          <div class="list-group-item">
+            None found, please compile a contract using the Solidity Compiler
+            tab <img src="./compiler.png" width="30" />
+          </div>
+        `;
+
+    const form = html`
+      <div>
+        <div class="form-group">
+          <label for="dappContracts">Available Contracts:</label> ${
+            availableContracts
+          }
+        </div>
+        <div class="form-group">
+          <label for="dappName">Name: </label>
+          <input
+            type="text"
+            class="form-control"
+            id="dappName"
+            ?disabled="${!isContracts}"
+            value="${Object.keys(this.contracts)[0] || ''}"
+          />
+        </div>
+        <div class="form-group">
+          <label for="dappAddress">Deployed Address: </label>
+          <input
+            type="text"
+            class="form-control"
+            id="dappAddress"
+            placeholder="0xabc..."
+            ?disabled="${!isContracts}"
+          />
+        </div>
+        <button
+          type="submit"
+          style="margin:10px 0 3px 0"
+          class="btn btn-lg btn-primary mb-2"
+          @click="${() => this.generateInterface()}"
+          ?disabled="${!isContracts}"
+        >
+          Generate Dapp
+        </button>
       </div>
     `;
 
-    const info =
-      Object.keys(this.docs).length === 0
-        ? html`
-            <p>Please compile a contract using the Solidity Compiler.</p>
-          `
-        : html`
-            <p>Available contracts:</p>
-          `;
+    const contractAlerts = html`
+      <div
+        class="alert alert-${this.contractAlerts.type}"
+        role="alert"
+        ?hidden="${Object.keys(this.contractAlerts).length === 0}"
+      >
+        <img style="margin: 0 0 0 0" src="./chelsea.png" width="50" /> ${
+          this.contractAlerts.message
+        }
+      </div>
+    `;
 
-    const button =
-      Object.keys(this.docs).length === 0
-        ? ''
-        : html`
-            <button
-              class="btn btn-lg btn-primary"
-              @click="${() => this.generateInterface()}"
-            >
-              Generate Interface
-            </button>
-          `;
-
-    const interfaces = Object.keys(this.dapps).map((name, index) => {
+    const dapps = Object.keys(this.oneclickdapps).map((name, index) => {
       return html`
-        <a href="${ONE_CLICK_DAPP_URL}/${this.dapps[name]}" target="_blank">
-          <div class="list-group-item list-group-item-action">
-            ${name}: ${this.dapps[name]}
+        <div class="card" style="margin-top:7px">
+          <div class="card-body" style="padding: 7px">
+            <h5 class="card-title">${name}</h5>
+            <h6 class="card-subtitle mb-2 text-muted">
+              ${this.oneclickdapps[name].abi.length} Functions
+            </h6>
+            <a
+              href="${ONE_CLICK_DAPP_URL}/${this.oneclickdapps[name].mnemonic}"
+              class="card-link"
+              target="_blank"
+              >oneclickdapp.com/${this.oneclickdapps[name].mnemonic}</a
+            >
           </div>
-        </a>
+        </div>
       `;
     });
 
@@ -165,6 +266,7 @@ export class EthdocComponent extends LitElement {
         .alert {
           animation: enter 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
         }
+
         @keyframes enter {
           0% {
             opacity: 0;
@@ -177,11 +279,15 @@ export class EthdocComponent extends LitElement {
         }
       </style>
       <main>
-        ${info}
-        <div class="list-group">${contracts}</div>
-        <div id="button">${button}</div>
-        <div id="interfaces">${interfaces}</div>
-        <div id="alerts">${docAlerts}</div>
+        <h4>Let's make it <b>Persistent</b></h4>
+        <a href="https://twitter.com/pi0neerpat">(Thank the creator)</a>
+        <div style="margin: 10px 0  0 0" id="form">${form}</div>
+        <div id="alerts" style="margin: 0 0  0 0">${contractAlerts}</div>
+        <h4 style="margin: 10px 0  0 0">Your Dapps:</h4>
+        <h6>
+          <a href="https://oneclickdapp.com/new" target="_blank">view recent</a>
+        </h6>
+        <div class="list-group" id="dapps">${dapps}</div>
       </main>
     `;
   }
