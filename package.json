@@ -31,7 +31,7 @@
     "start": "webpack --watch",
     "build": "webpack --config webpack.prod.js",
     "serve": "webpack-dev-server --config webpack.dev.js",
-    "deploy": "surge ./dist remix-one-click-dapp.surge.sh"
+    "deploy": "npm run build && surge ./dist remix-one-click-dapp.surge.sh"
   },
   "repository": {
     "type": "git",
