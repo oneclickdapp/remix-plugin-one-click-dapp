@@ -1,7 +1,6 @@
 import { LitElement, html, customElement } from 'lit-element';
-import { createIframeClient } from './client';
+import { createIframeClient } from '@remixproject/plugin';
 import {
-  remixApi,
   CompilationFileSources,
   CompilationResult,
   Status
