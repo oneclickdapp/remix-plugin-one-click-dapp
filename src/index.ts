@@ -279,7 +279,6 @@ export class OneClickDapp extends LitElement {
       </style>
       <main>
         <h4>Let's make it <b>Persistent</b></h4>
-        <a href="https://twitter.com/pi0neerpat">(Thank the creator)</a>
         <div style="margin: 10px 0  0 0" id="form">${form}</div>
         <div id="alerts" style="margin: 0 0  0 0">${contractAlerts}</div>
         <h4 style="margin: 10px 0  0 0">Your Dapps:</h4>

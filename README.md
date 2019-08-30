@@ -2,11 +2,11 @@
 
 **Generate a persistent interface for your smart contract directly from Remix.**
 
-<img width=300 alignText="center" src="./resources/oneclickexample.png"/>
+<img width=300 alignText="center" src="./resources/screenshot-plugin.png"/>
 
 ### Install
 
-Within the [Remix IDE](remix.ethereum.org), click on the :electric_plug: symbol to open the plugin manager.
+Within the [Remix IDE](https://remix.ethereum.org), click on the :electric_plug: symbol to open the plugin manager.
 
 Search for "One Click Dapp" and hit "Activate".
 
@@ -25,42 +25,60 @@ A **unique URL will be created** for your smart contract. Bookmark it for later,
 
 In the plugin manager in [Remix (alpha)](http://remix-alpha.ethereum.org), select "Connect a local plugin"
 
-## Create your own Remix plugin
+# Create your own Remix plugin
 
 _These are my personal notes for creating this Remix Plugin, in case you need some help creating your own_
 
-Started with the Readme for [remix-plugin](https://github.com/ethereum/remix-plugin)
+## Getting Started
 
-Cloned the `ethdocs` plugin, which was most similar to my goal.
+Fork whichever plugin is most similar to your needs. You can use this one, or play with all of them at [remix-alpha](https://remix-alpha.ethereum.org). For this project I cloned the `ethdocs` plugin, since it was most similar to my vision.
 
-**tsconfig.json**
+Skim through the [remix-plugin](https://github.com/ethereum/remix-plugin) Readme of course.
 
-- Combined `tsconfig.json` with the config in root of the remix-plugin repo
-- Added `client` and `utils` from the root directory
-- Changed build folder path
-- Installed required dependencies using npm
+## Webpack / Typescript configuration
 
-**Getting it running**
+If you prefer to use the vanilla javascript/html method and use the CDN to import the plugin-client, then you can ignore this section
 
 I'm new to Typescript, so I followed [this guide](https://alligator.io/typescript/new-project/) on using typescript and [this guide](https://github.com/BrianDGLS/express-ts) on setting up a new typescript project. https://www.codingforentrepreneurs.com/blog/typescript-setup-guide/
 
-### Publishing / Hosting
+**Converting ethdocsPlugin => myPlugin**
 
-Make a PR on `src/remixAppManager.js` [in the remix-ide repo](https://github.com/ethereum/remix-ide/blob/8d3a09f9b19060509d2789ced8e8d5ee6c9f6e9f/src/remixAppManager.js) to add a new plugin. Be sure to use the right keys [see this doc](https://github.com/ethereum/remix-plugin/blob/master/doc/deploy/profile.md).
+*I already did these steps here, but just leaving notes so you know what happened.*
 
-**Hosting**
+The plugin needs two things to run properly 1) the `client`, and 2) `utils` which provides the typescript types. Initially I imported the `client` from a local folder (how ethdocs plugin does it), but I was kindly instructed to change this to importing via npm dependency `@remixproject/plugin`.
 
-- The most common method is to use www.surge.sh (e.g. https://remix-ethdoc-plugin.surge.sh). See [this doc](https://surge.sh/help/deploying-continuously-using-git-hooks) on how to deploy continuously from a github repo.
-- OR use github pages and follow [this guide](https://zubialevich.blogspot.com/2018/09/how-to-build-typescript-github-pages-app.html)
-- OR host it on your own server
+- `utils` were just copied directly from [remix-plugin/projects/utils/
+](https://github.com/ethereum/remix-plugin/tree/master/projects/utils). You only need the ones you will use, but I find it helpful to view them all.
+- I merged `tsconfig.json` with the "common" `tsconfig.json` in root of the remix-plugin repo. Same for `webpack.config.js` with `webpack.common.js`
 
-### Notes
+## Developing
 
-#### External links in an iframe
+Now that you're ready to develop, there are two methods, but no real advantage for either. One issue I had was not being able to connect to my plugin, even though it was running. Switching between methods helped as a sanity check.
 
-I'd like to use external links, however the only option is `target="\_parent"` which forces the current window to change. Using `target="_blank"` does nothing.
+1. [Remix-alpha.ethereum.org](https://Remix-alpha.ethereum.org) allows you to add a local plugin. This is also where your plugin will appear once it has been completed and approved.
+2. Host the remix IDE locally so you can code on the :airplane:
 
-I added `allow-popups` in Line 106 of `remix-plugin/projects/engine/src/plugin/iframe.ts` and made a [Pull request on the repo](https://github.com/ethereum/remix-plugin/pull/120)
+## Hosting
+
+- The most common and totally free / easy method is to use www.surge.sh (e.g. https://remix-ethdoc-plugin.surge.sh). If you want to get fancy, see [this doc](https://surge.sh/help/deploying-continuously-using-git-hooks) on how to deploy to Surge continuously from a github repo.
+- Use Github pages. [This guide](https://zubialevich.blogspot.com/2018/09/how-to-build-typescript-github-pages-app.html) might help if you're using typecript.
+- Host it on your own server... but really, why bother?
+
+## Publishing
+
+Create a profile for your plugin using the correct keys in [the profile doc](https://github.com/ethereum/remix-plugin/blob/master/doc/deploy/profile.md). Then make a PR on `src/remixAppManager.js` [in the remix-ide repo](https://github.com/ethereum/remix-ide/blob/8d3a09f9b19060509d2789ced8e8d5ee6c9f6e9f/src/remixAppManager.js). Remember it will appear on remix-alpha first, before going to production. I have no idea what the process is for this :confused:
+
+## Extras
+
+Add a link to plugin documentation with a :book: icon next to the title, just add a "documentation" property to your `profile.js`. (note: This is not documented in the [Profile section](https://github.com/ethereum/remix-plugin/blob/master/doc/deploy/profile.md))
+
+## Notes
+
+### Need something to make your plugin work? Make a PR!
+
+I wanted to to use external links, however the only option was `target="\_parent"` which forces the current window to change. Using `target="_blank"` did nothing.
+
+I added `allow-popups` in Line 106 of `remix-plugin/projects/engine/src/plugin/iframe.ts` and made a [Pull request on the repo](https://github.com/ethereum/remix-plugin/pull/120). In a few days my change was added to the official Remix-IDE!
 
 ```js
 this.iframe.setAttribute(
@@ -69,8 +87,6 @@ this.iframe.setAttribute(
 );
 ```
 
-#### Profile
+# Go forth and conquer
 
-To add a link to plugin documentation with a :book: icon next to the title, just add a "documentation" property to your `profile.js`. (note: This is *unconfirmed*  and not documented in the [Profile docs](https://github.com/ethereum/remix-plugin/blob/master/doc/deploy/profile.md))
-
-#### Random keep-going video to watch https://youtu.be/KSWqx8goqSY
+[@pi0neerpat](https://twitter.com/pi0neerpat)
