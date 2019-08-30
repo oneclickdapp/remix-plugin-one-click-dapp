@@ -6,7 +6,7 @@
 
 ### Install
 
-Within the [Remix IDE](https://remix.ethereum.org), click on the :electric_plug: symbol to open the plugin manager.
+Within the [Remix Alpha IDE](https://remix-alpha.ethereum.org), click on the :electric_plug: symbol to open the plugin manager. (Not sure when or how to move to the production version of Remix)
 
 Search for "One Click Dapp" and hit "Activate".
 
