@@ -1,5 +1,6 @@
 import { LitElement, html, customElement } from 'lit-element';
-import { createIframeClient } from '@remixproject/plugin';
+import { PluginClient } from '@remixproject/plugin';
+import { createClient } from '@remixproject/plugin-webview'
 import {
   CompilationFileSources,
   CompilationResult,
@@ -30,7 +31,7 @@ type dappMap = {
 @customElement('one-click-dapp')
 export class OneClickDapp extends LitElement {
   /** client to communicate with the IDE */
-  private client = createIframeClient();
+  private client = createClient(new PluginClient())
   private contracts: ContractMap = {};
   private contractAlerts: any = {};
   private oneclickdapps: dappMap = {};
