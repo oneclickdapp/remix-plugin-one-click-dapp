@@ -25,12 +25,14 @@ A **unique URL will be created** for your smart contract. Bookmark it for later,
 
 In the plugin manager in [Remix (alpha)](http://remix-alpha.ethereum.org), select "Connect a local plugin". In the "Api" field, enter `compilationFinished`.
 
+> Hosted with Vercel now, no longer surge
+
 Publish to surge
 
 ```bash
 npm run build
 cd dist
-surge --domain remix.oneclickdapp.com
+surge --domain https://remix.oneclickdapp.com
 ```
 
 ## Make your own Remix plugin
