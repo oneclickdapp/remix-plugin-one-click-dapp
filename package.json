@@ -12,7 +12,7 @@
   "dependencies": {
     "@remixproject/plugin": "^0.3.5",
     "@remixproject/plugin-webview": "^0.3.5",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "events": "^3.2.0"
   },
   "devDependencies": {
