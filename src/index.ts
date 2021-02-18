@@ -1,15 +1,15 @@
-import { LitElement, html, customElement } from 'lit-element';
-import { PluginClient } from '@remixproject/plugin';
-import { createClient } from '@remixproject/plugin-webview'
-import {
-  CompilationFileSources,
-  CompilationResult,
-  Status
-} from './utils';
-import axios from 'axios';
-import encouragement from './encouragement';
+import { LitElement, html, customElement } from "lit-element";
+import { PluginClient } from "@remixproject/plugin";
+import { createClient } from "@remixproject/plugin-webview";
+import { CompilationFileSources, CompilationResult, Status } from "./utils";
+import axios from "axios";
+import { print } from "graphql";
+import gql from "graphql-tag";
 
-const ONE_CLICK_DAPP_URL = 'https://oneclickdapp.com';
+import encouragement from "./encouragement";
+
+const ONE_CLICK_DAPP_URL = "http://localhost:8911";
+// const ONE_CLICK_DAPP_URL = "https://oneclickdapp.com";
 
 type contract = {
   abi: any[];
@@ -28,10 +28,10 @@ type dappMap = {
   [name: string]: dapp;
 };
 
-@customElement('one-click-dapp')
+@customElement("one-click-dapp")
 export class OneClickDapp extends LitElement {
   /** client to communicate with the IDE */
-  private client = createClient(new PluginClient())
+  private client = createClient(new PluginClient());
   private contracts: ContractMap = {};
   private contractAlerts: any = {};
   private oneclickdapps: dappMap = {};
@@ -44,7 +44,7 @@ export class OneClickDapp extends LitElement {
   async init() {
     await this.client.onload();
     this.client.solidity.on(
-      'compilationFinished',
+      "compilationFinished",
       (
         file: string,
         src: CompilationFileSources,
@@ -54,11 +54,11 @@ export class OneClickDapp extends LitElement {
         if (!result) return;
         this.contracts = this.createContracts(result);
         const status: Status = {
-          key: 'succeed',
-          type: 'success',
-          title: 'New interface generated'
+          key: "succeed",
+          type: "success",
+          title: "New interface generated",
         };
-        this.client.emit('statusChanged', status);
+        this.client.emit("statusChanged", status);
         this.requestUpdate();
       }
     );
@@ -73,7 +73,7 @@ export class OneClickDapp extends LitElement {
     return Object.keys(result.contracts).reduce((acc, fileName) => {
       const contracts = result.contracts[fileName];
       Object.keys(contracts).forEach(
-        name => (acc[name] = { abi: contracts[name].abi })
+        (name) => (acc[name] = { abi: contracts[name].abi })
       );
       return acc;
     }, {});
@@ -82,59 +82,72 @@ export class OneClickDapp extends LitElement {
   /** Use One Click Dapp API to generate an interface */
   async generateInterface() {
     try {
-      const dappName = (<HTMLInputElement>document.getElementById('dappName'))
+      const dappName = (<HTMLInputElement>document.getElementById("dappName"))
         .value;
-      if (dappName.trim() === '') {
-        throw new Error('Please enter a name for your dapp');
+      if (dappName.trim() === "") {
+        throw new Error("Please enter a name for your dapp");
       }
 
       const dappAddress = (<HTMLInputElement>(
-        document.getElementById('dappAddress')
+        document.getElementById("dappAddress")
       )).value;
       if (!/^(0x)+[0-9a-fA-F]{40}$/i.test(dappAddress)) {
-        throw new Error('Please enter a valid contract address');
+        throw new Error("Please enter a valid contract address");
       }
 
       const selectedContractNames = [].slice
-        .call(document.querySelectorAll('input[type=checkbox]:checked'))
-        .map(checked => {
+        .call(document.querySelectorAll("input[type=checkbox]:checked"))
+        .map((checked) => {
           return (<HTMLInputElement>checked).value;
         });
-      const combinedAbi = selectedContractNames.reduce(
-        (acc, name) => {
-          return acc.concat(this.contracts[name].abi);
-        },
-        <any>[]
-      );
+      const combinedAbi = selectedContractNames.reduce((acc, name) => {
+        return acc.concat(this.contracts[name].abi);
+      }, <any>[]);
       if (combinedAbi.length === 0) {
-        throw new Error('Please select at least one contract');
+        throw new Error("Please select at least one contract");
       }
 
-      this.client.emit('statusChanged', {
-        key: 'loading',
-        type: 'info',
-        title: 'Generating ...'
+      this.client.emit("statusChanged", {
+        key: "loading",
+        type: "info",
+        title: "Generating ...",
       });
+      const CREATE_DAPP = gql`
+        mutation CreateDappMutation($input: CreateDappInput!) {
+          createDapp(input: $input) {
+            mnemonic
+          }
+        }
+      `;
       axios
-        .post(`${ONE_CLICK_DAPP_URL}/contracts`, {
-          contractName: dappName,
-          contractAddress: dappAddress,
-          abi: combinedAbi,
-          network: 'unknown',
-          creatorAddress: 'remix-plugin'
+        .post(`${ONE_CLICK_DAPP_URL}/graphql`, {
+          method: "post",
+          query: print(CREATE_DAPP),
+          variables: {
+            input: {
+              name: dappName,
+              description: "Created using the Remix plugin for One Click Dapp",
+              abi: JSON.stringify(combinedAbi),
+              creatorId: "8c89c6c6-e56b-4368-a407-f040ba4c2b33", // Remix user
+              contract: dappAddress,
+            },
+          },
         })
-        .then(res => {
+        .then((res) => {
+          console.log(res);
+          if (!res.data.data.createDapp.mnemonic)
+            throw Error("Couldn't create dapp");
           this.oneclickdapps[dappName] = {
             abi: combinedAbi,
-            mnemonic: res.data.mnemonic
+            mnemonic: res.data.data.createDapp.mnemonic,
           };
           this.showAlert();
         })
-        .catch(err => {
+        .catch((err) => {
           throw err.message;
         });
       setTimeout(() => {
-        this.client.emit('statusChanged', { key: 'none' });
+        this.client.emit("statusChanged", { key: "none" });
       }, 10000);
     } catch (err) {
       this.showAlert(err);
@@ -145,10 +158,10 @@ export class OneClickDapp extends LitElement {
     if (!err) {
       const message =
         encouragement[Math.floor(Math.random() * encouragement.length)];
-      this.contractAlerts = { message, type: 'success' };
+      this.contractAlerts = { message, type: "success" };
     } else {
       const message = `${err}`;
-      this.contractAlerts = { message, type: 'warning' };
+      this.contractAlerts = { message, type: "warning" };
     }
     this.requestUpdate();
     setTimeout(() => {
@@ -187,9 +200,8 @@ export class OneClickDapp extends LitElement {
     const form = html`
       <div>
         <div class="form-group">
-          <label for="dappContracts">Available Contracts:</label> ${
-            availableContracts
-          }
+          <label for="dappContracts">Available Contracts:</label>
+          ${availableContracts}
         </div>
         <div class="form-group">
           <label for="dappName">Name: </label>
@@ -198,7 +210,7 @@ export class OneClickDapp extends LitElement {
             class="form-control"
             id="dappName"
             ?disabled="${!isContracts}"
-            value="${Object.keys(this.contracts)[0] || ''}"
+            value="${Object.keys(this.contracts)[0] || ""}"
           />
         </div>
         <div class="form-group">
@@ -229,9 +241,8 @@ export class OneClickDapp extends LitElement {
         role="alert"
         ?hidden="${Object.keys(this.contractAlerts).length === 0}"
       >
-        <img style="margin: 0 0 0 0" src="./chelsea.png" width="50" /> ${
-          this.contractAlerts.message
-        }
+        <img style="margin: 0 0 0 0" src="./chelsea.png" width="50" /> ${this
+          .contractAlerts.message}
       </div>
     `;
 

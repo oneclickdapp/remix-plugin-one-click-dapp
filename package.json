@@ -10,10 +10,12 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "@remixproject/plugin": "^0.3.5",
-    "@remixproject/plugin-webview": "^0.3.5",
-    "axios": "^0.19.2",
-    "events": "^3.2.0"
+    "@remixproject/plugin": "^0.3.8",
+    "@remixproject/plugin-webview": "^0.3.8",
+    "axios": "^0.21.1",
+    "events": "^3.2.0",
+    "graphql": "^15.5.0",
+    "graphql-tag": "^2.11.0"
   },
   "devDependencies": {
     "file-loader": "^4.3.0",
@@ -24,7 +26,7 @@
     "ts-loader": "^5.4.5",
     "tsconfig-paths-webpack-plugin": "^3.3.0",
     "tslint": "^5.20.1",
-    "typescript": "^3.9.7",
+    "typescript": "^3.9.9",
     "webpack": "^4.46.0",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.2"
