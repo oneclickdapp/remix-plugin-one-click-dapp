@@ -1,6 +1,6 @@
 {
-  "name": "remix-one-click-plugin",
-  "version": "1.0.0",
+  "name": "remix-plugin-one-click-dapp",
+  "version": "0.1.1",
   "description": "Generate a persistent interface for your smart contract directly from Remix.",
   "contributors": [
     {
@@ -51,8 +51,5 @@
   ],
   "author": "Patrick Gallagher",
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/pi0neerpat/remix-one-click-plugin/issues"
-  },
-  "homepage": "https://github.com/pi0neerpat/remix-one-click-plugin#readme"
+  "homepage": "https://github.com/oneclickdapp/remix-plugin-one-click-dapp"
 }

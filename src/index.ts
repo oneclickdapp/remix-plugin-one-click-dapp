@@ -8,8 +8,9 @@ import gql from "graphql-tag";
 
 import encouragement from "./encouragement";
 
-const ONE_CLICK_DAPP_URL = "http://localhost:8911";
-// const ONE_CLICK_DAPP_URL = "https://oneclickdapp.com";
+// const ONE_CLICK_DAPP_API = "http://localhost:8911";
+const ONE_CLICK_DAPP_API = "https://oneclickdapp.com/api/graphql";
+const ONE_CLICK_DAPP_URL = "https://oneclickdapp.com";
 
 type contract = {
   abi: any[];
@@ -120,7 +121,7 @@ export class OneClickDapp extends LitElement {
         }
       `;
       axios
-        .post(`${ONE_CLICK_DAPP_URL}/graphql`, {
+        .post(ONE_CLICK_DAPP_API, {
           method: "post",
           query: print(CREATE_DAPP),
           variables: {
