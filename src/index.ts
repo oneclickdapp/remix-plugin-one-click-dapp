@@ -1,7 +1,8 @@
 import { LitElement, html, customElement } from "lit-element";
 import { PluginClient } from "@remixproject/plugin";
 import { createClient } from "@remixproject/plugin-webview";
-import { CompilationFileSources, CompilationResult, Status } from "./utils";
+import { CompilationFileSources, CompilationResult } from "@remixproject/plugin-api/";
+import { Status } from "@remixproject/plugin-utils"
 import axios from "axios";
 import { print } from "graphql";
 import gql from "graphql-tag";
