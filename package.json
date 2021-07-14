@@ -10,8 +10,8 @@
   ],
   "main": "dist/index.js",
   "dependencies": {
-    "@remixproject/plugin": "^0.3.9",
-    "@remixproject/plugin-webview": "^0.3.9",
+    "@remixproject/plugin": "^0.3.19",
+    "@remixproject/plugin-webview": "^0.3.19",
     "axios": "^0.21.1",
     "events": "^3.2.0",
     "graphql": "^15.5.0",
