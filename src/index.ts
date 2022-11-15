@@ -132,6 +132,7 @@ export class OneClickDapp extends LitElement {
               abi: JSON.stringify(combinedAbi),
               creatorId: "8c89c6c6-e56b-4368-a407-f040ba4c2b33", // Remix user
               contract: dappAddress,
+              network: ""
             },
           },
         })
